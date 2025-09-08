@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene Snipe</title>
+    <link rel="icon" type="image/x-icon" href="https://static.thenounproject.com/png/1730291-200.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0b0b0b 0%, #1e1e1e 50%, #0b0b0b 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            transition: background 0.8s ease;
+        }
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Section backgrounds */
+        section {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: background 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        /* Background overlays */
+        .section-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: #0b0b0b;
+            transition: background 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .home-bg { background: linear-gradient(135deg, #001122 0%, #443344 50%, #001122 100%), url('https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/1aad9219-8424-42e7-9170-aab07686ecf7.png'); background-size: cover; background-attachment: fixed; }
+        .trailer-bg { background: linear-gradient(135deg, #222255 0%, #555533 50%, #222255 100%), url('https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/98e333d3-f00e-437c-9130-198e27b4c79d.png'); background-size: cover; background-attachment: fixed; }
+        .about-bg { background: linear-gradient(135deg, #333311 0%, #666622 50%, #333311 100%), url('https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/86107c0e-9203-4c34-8958-fbd1d0c56261.png'); background-size: cover; background-attachment: fixed; }
+        .events-bg { background: linear-gradient(135deg, #550033 0%, #883355 50%, #550033 100%), url('https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d91173ac-3f3a-44e8-968f-a5fb879d4d7b.png'); background-size: cover; background-attachment: fixed; }
+        .tips-bg { background: linear-gradient(135deg, #006666 0%, #338888 50%, #006666 100%), url('https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/80f85981-9ff0-4980-aa1a-0c3c07d535e7.png'); background-size: cover; background-attachment: fixed; }
+        .credits-bg { background: linear-gradient(135deg, #334466 0%, #6688aa 50%, #334466 100%), url('https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/0be4c960-0b45-494c-aa71-c2ab6422a59f.png'); background-size: cover; background-attachment: fixed; }
+        /* Canvas visibility */
+        #interactive-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        /* Parallax effect */
+        section .content {
+            position: relative;
+            z-index: 1;
+        }
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px) rotateX(5deg);
+            animation: fadeIn 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0) rotateX(0); }
+        }
+        .slide-up {
+            opacity: 0;
+            transform: translateY(50px) scale(0.95);
+            animation: slideUp 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .scale-hover {
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .scale-hover:hover {
+            transform: scale(1.1) rotate(3deg);
+            box-shadow: 0 25px 50px rgba(255, 60, 120, 0.5);
+        }
+        .dynamic-glow {
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
+            transition: filter 0.3s ease;
+        }
+        .dynamic-glow:hover {
+            filter: drop-shadow(0 0 25px rgba(255, 60, 120, 1));
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.6s ease;
+        }
+        .popup-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            animation: popupSlide 0.5s ease forwards;
+            background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+            padding: 3rem;
+            border-radius: 25px;
+            max-width: 700px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9);
+        }
+        @keyframes popupSlide {
+            to { transform: translate(-50%, -50%) scale(1); }
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: #ff3c78;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: scale(1);
+        }
+        .close-btn:hover {
+            color: #ff6b90;
+            transform: scale(1.2) rotate(90deg);
+        }
+        .toolbar button {
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            transform: translateY(0);
+        }
+        .toolbar button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+        .toolbar button:hover {
+            background: rgba(255, 60, 120, 0.9);
+            box-shadow: 0 0 20px rgba(255, 60, 120, 0.6);
+            transform: translateY(-3px);
+        }
+        .toolbar button:hover::before {
+            left: 100%;
+        }
+        /* Home header layout */
+        .home-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .logo-left, .logo-right {
+            flex-shrink: 0;
+        }
+        .titles {
+            text-align: center;
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .toolbar { gap: 0.5rem; flex-wrap: wrap; justify-content: space-around; font-size: 0.9rem; }
+            .event-btn { margin-bottom: 1.5rem; }
+            .home-header { flex-direction: column; gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Section Background Overlay -->
+    <div id="section-bg" class="section-bg home-bg"></div>
+
+    <!-- Interactive Background Canvas -->
+    <canvas id="interactive-bg"></canvas>
+
+    <!-- Quick Access Toolbar -->
+    <nav class="toolbar fixed top-0 w-full h-18 bg-black bg-opacity-95 backdrop-blur-xl flex items-center justify-center gap-8 z-50 text-white font-semibold shadow-2xl">
+        <button onclick="scrollToSection('home')">Home</button>
+        <button onclick="scrollToSection('trailer')">Trailer</button>
+        <button onclick="scrollToSection('about')">About</button>
+        <button onclick="scrollToSection('events')">Events</button>
+        <button onclick="scrollToSection('tips')">Tips</button>
+        <button onclick="scrollToSection('credits')">Credits</button>
+    </nav>
+
+    <!-- Header Section -->
+    <section id="home">
+        <div class="content pt-28 pb-14 px-12">
+            <div class="home-header fade-in">
+                <div class="logo-left">
+                    <img src="SceneSnipe-BGRemove.png" alt="Elegant circular logo in deep magenta and white, featuring intertwined film strips and a central camera aperture symbolizing precision and artistry in filmmaking for Scene Snipe" class="w-28 h-28 rounded-full border-4 border-pink-500 shadow-2xl drop-shadow-lg dynamic-glow">
+                </div>
+                <div class="titles">
+                    <h1 class="text-7xl font-bold bg-gradient-to-r from-pink-400 via-purple-500 to-blue-500 bg-clip-text text-transparent drop-shadow-xl">Scene Snipe</h1>
+                    <p class="mt-6 text-3xl text-gray-300 italic font-light">Aim. Shoot. Steal the Scene.</p>
+                </div>
+                <div class="logo-right">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/5de5ee29-5e93-4b8b-8cc6-535016d5d1e9.png" alt="Sophisticated round emblem in azure blue and white, depicting a stylized camera lens with layered film reels, representing advanced cinematic technology and event innovation for Scene Snipe" class="w-28 h-28 rounded-full border-4 border-blue-500 shadow-2xl drop-shadow-lg dynamic-glow">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trailer Section -->
+    <section id="trailer">
+        <div class="content py-24 px-12 text-center fade-in">
+            <h2 class="text-5xl font-semibold mb-12 text-pink-400 drop-shadow-md">Watch the Official Trailer</h2>
+            <video controls class="max-w-full h-auto rounded-3xl shadow-2xl mx-auto border-2 border-gray-600 dynamic-glow hover:scale-105 transition-transform duration-500" poster="SceneSnipe.png" style="max-width: 500px;">
+                <source src="demo.mp4" type="video/mp4">
+                Your browser does not support the video tag. Please update to enjoy the trailer.
+            </video>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about">
+        <div class="content py-24 px-12 text-center slide-up">
+            <h2 class="text-5xl font-semibold mb-16 text-purple-400 drop-shadow-md">About Scene Snipe</h2>
+            <p class="max-w-6xl mx-auto text-2xl leading-relaxed text-gray-200 font-light">
+                Scene Snipe is a vibrant, multi-format media event that invites students to explore the art of digital storytelling through a variety of creative challenges. It’s not just about filmmaking—it’s a celebration of imagination across disciplines like animation, photography, design, and editing. Whether you're a solo creator or part of a team, Scene Snipe offers a platform to experiment, collaborate, and showcase your talent.
+            </p>
+        </div>
+    </section>
+
+    <!-- Event Categories Section -->
+    <section id="events">
+        <div class="content py-24 px-12 text-center fade-in">
+            <h2 class="text-5xl font-semibold mb-20 text-pink-400 drop-shadow-md">Event Categories</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                <div class="event-btn scale-hover bg-gradient-to-br from-purple-600 to-orange-700 p-10 rounded-3xl text-center cursor-pointer shadow-2xl dynamic-glow" onclick="showPopup('Reel Rush')">
+                    <img src="https://applemagazine.com/wp-content/uploads/2020/05/instagram-banner-01.png" alt="Vibrant scene of a dynamic film crew sprinting on a bustling urban location at sunset, capturing a high-energy shoot with professional cameras, tripods, lighting rigs, and crew members in motion, showcasing the fast-paced nature of short film production" class="w-full h-48 object-cover rounded-xl mb-8 border-2 border-purple-400">
+                    <h3 class="text-3xl font-bold text-white mb-4">Reel Rush</h3>
+                    <p class="text-gray-300 font-light text-lg">"Team Instagram"</p>
+                </div>
+                <div class="event-btn scale-hover bg-gradient-to-br from-blue-600 to-cyan-800 p-10 rounded-3xl text-center cursor-pointer shadow-2xl dynamic-glow" onclick="showPopup('Poster Perfect')">
+                    <img src="https://framerusercontent.com/images/vZoGT8oZqxMLX8zRCWqaBP81AQU.jpg?width=1560&height=878" alt="Stylish digital rendering of a movie poster with bold typography, dynamic color gradients, intricate illustrations of film elements like clapperboards and spotlights, and a sophisticated layout capturing the essence of cinematic promotion" class="w-full h-48 object-cover rounded-xl mb-8 border-2 border-blue-400">
+                    <h3 class="text-3xl font-bold text-white mb-4">Poster Perfect</h3>
+                    <p class="text-gray-300 font-light text-lg">"Team Facebook"</p>
+                </div>
+                <div class="event-btn scale-hover bg-gradient-to-br from-red-600 to-pink-800 p-10 rounded-3xl text-center cursor-pointer shadow-2xl dynamic-glow" onclick="showPopup('Trailer Takedown')">
+                    <img src="https://wallpapers.com/images/hd/old-youtube-logo-hgf3z998485wnkh6.jpg" alt="Intricate depiction of a trailer editing workstation with multiple screens displaying film sequences, storyboard thumbnails, and editing software interfaces filled with cinematic clips, sound waves, and montage effects illustrating professional trailer crafting" class="w-full h-48 object-cover rounded-xl mb-8 border-2 border-red-400">
+                    <h3 class="text-3xl font-bold text-white mb-4">Trailer Takedown</h3>
+                    <p class="text-gray-300 font-light text-lg">"Team YouTube"</p>
+                </div>
+                <div class="event-btn scale-hover bg-gradient-to-br from-purple-600 to-indigo-800 p-10 rounded-3xl text-center cursor-pointer shadow-2xl dynamic-glow" onclick="showPopup('Stop Motion Magic')">
+                    <img src="https://img.freepik.com/free-vector/modern-banner-with-twitch-logo_69286-296.jpg" alt="Whimsical illustrated setup showing handmade puppets posed on a miniature set with clay figures, colorful backdrops, animation rigs, and studio lighting, conveying the magical process of stop motion filmmaking in a creative and detailed workspace" class="w-full h-48 object-cover rounded-xl mb-8 border-2 border-purple-400">
+                    <h3 class="text-3xl font-bold text-white mb-4">Stop Motion Magic</h3>
+                    <p class="text-gray-300 font-light text-lg">"Team Twitch"</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tips and Tricks Section -->
+    <section id="tips">
+        <div class="content py-24 px-12 text-center slide-up">
+            <h2 class="text-5xl font-semibold mb-20 text-purple-400 drop-shadow-md">Tips & Tricks</h2>
+            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div class="scale-hover bg-gray-800 p-12 rounded-3xl shadow-2xl dynamic-glow">
+                    <h3 class="text-3xl font-bold mb-8 text-pink-400">Master Composition</h3>
+                    <p class="text-xl text-gray-300 font-light">Leverage the rule of thirds and golden ratio for visually compelling shots. Experiment with angles, perspectives, and leading lines to guide audience attention seamlessly.</p>
+                </div>
+                <div class="scale-hover bg-gray-800 p-12 rounded-3xl shadow-2xl dynamic-glow">
+                    <h3 class="text-3xl font-bold mb-8 text-pink-400">Illuminate Your Vision</h3>
+                    <p class="text-xl text-gray-300 font-light">Harness natural light for organic authenticity or artificial setups for dramatic effects. Employ shadows, highlights, and color temperatures to evoke emotions and set tones.</p>
+                </div>
+                <div class="scale-hover bg-gray-800 p-12 rounded-3xl shadow-2xl dynamic-glow">
+                    <h3 class="text-3xl font-bold mb-8 text-pink-400">Strategic Editing Techniques</h3>
+                    <p class="text-xl text-gray-300 font-light">Refine timelines with precision, balancing rhythm and emotion. Incorporate sync sound, subtle effects, and musical cues to heighten narrative impact and viewer engagement.</p>
+                </div>
+                <div class="scale-hover bg-gray-800 p-12 rounded-3xl shadow-2xl dynamic-glow">
+                    <h3 class="text-3xl font-bold mb-8 text-pink-400">Craft Storytelling Excellence</h3>
+                    <p class="text-xl text-gray-300 font-light">Hook viewers instantly with potent openings. Layer characters, plots, and themes thoughtfully, blending suspense, humor, and depth for resonant, unforgettable productions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Credits Section -->
+    <section id="credits">
+        <div class="content py-24 px-12 text-center fade-in">
+            <h2 class="text-5xl font-semibold mb-16 text-gray-300 drop-shadow-md">Credits</h2>
+            <p class="text-2xl font-light">Crafted with Precision by Alliance Party | © 2025 Scene Snipe. All Rights Reserved.</p>
+            <p class="mt-8 text-xl text-gray-400">Gratitude to our visionary partners, talented participants, and the global film community for inspiring boundless cinematic innovation.</p>
+        </div>
+    </section>
+
+    <!-- Popup Modal -->
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <button class="close-btn" onclick="closePopup()">&times;</button>
+            <h3 id="popup-title" class="text-4xl font-bold mb-6" style="color: #ff3c78;"></h3>
+            <img id="popup-image" src="" alt="" class="w-full h-64 object-cover rounded-2xl mb-8 border-2 border-gray-600">
+            <p id="popup-description" class="text-xl text-gray-300 font-light leading-relaxed"></p>
+        </div>
+    </div>
+
+    <script>
+        // Interactive Background Particle System
+        const canvas = document.getElementById('interactive-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const mouse = { x: 0, y: 0 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        function createParticles() {
+            particles = [];
+            const particleCount = Math.min(120, Math.floor(window.innerWidth / 45));
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    size: Math.random() * 3 + 1,
+                    color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+                    connectDistance: 120
+                });
+            }
+        }
+        createParticles();
+        window.addEventListener('resize', createParticles);
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((particle, i) => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+                if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
+
+                const dx = mouse.x - particle.x;
+                const dy = mouse.y - particle.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 120) {
+                    particle.vx += dx * 0.00015;
+                    particle.vy += dy * 0.00015;
+                }
+
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.fill();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx2 = particles[j].x - particle.x;
+                    const dy2 = particles[j].y - particle.y;
+                    const dist = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                    if (dist < particle.connectDistance) {
+                        ctx.beginPath();
+                        ctx.moveTo(particle.x, particle.y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = particle.color;
+                        ctx.globalAlpha = (250 - dist) / 250;
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                    }
+                }
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        document.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        // Event data
+        const events = {
+            "Reel Rush": {
+                description: "Reel Rush is a dynamic short-form video competition that challenges students to unleash their creativity in just 60 seconds. Participants are invited to create engaging, original reels using the Instagram platform, centered around a specific theme or concept. Whether it's storytelling, humor, culture, or awareness, the goal is to make a powerful impact in a minute or less. The event celebrates visual expression, digital storytelling, and the art of concise communication—perfect for the fast-paced world of social media.",
+                image: "https://applemagazine.com/wp-content/uploads/2020/05/instagram-banner-01.png"
+            },
+            "Poster Perfect": {
+                description: "Poster Perfect is a creative design challenge where students craft eye-catching Facebook posters to promote ideas, events, or causes. The goal is to combine visual appeal with impactful messaging, using digital tools to create posters that stand out in the social media crowd. Whether it's raising awareness, celebrating culture, or advertising a school activity, Poster Perfect encourages artistic flair and thoughtful communication in a format made for sharing.",
+                image: "https://framerusercontent.com/images/vZoGT8oZqxMLX8zRCWqaBP81AQU.jpg?width=1560&height=878"
+            },
+            "Trailer Takedown": {
+                description: "Trailer Takedown is a high-impact video challenge where students produce a thrilling 2-minute trailer designed for YouTube. Whether it's a teaser for a fictional film, a campaign, or a school event, the goal is to captivate viewers with compelling visuals, dramatic pacing, and a clear narrative arc. Participants must master the art of storytelling in a short format—hooking the audience, building tension, and leaving them wanting more. It's all about cinematic flair, creative editing, and making every second count.",
+                image: "https://wallpapers.com/images/hd/old-youtube-logo-hgf3z998485wnkh6.jpg"
+            },
+            "Stop Motion Magic": {
+                description: "Stop Motion Magic is a hands-on animation challenge where students bring everyday objects to life using the timeless technique of stop motion. Participants craft short films—no longer than 5 minutes—that showcase creativity, storytelling, and visual imagination. Whether it's clay figures, paper cutouts, or toy adventures, each frame is carefully captured to build a captivating sequence. The final masterpieces are uploaded to Twitch, turning the classroom into a digital film festival where originality and patience shine.",
+                image: "https://img.freepik.com/free-vector/modern-banner-with-twitch-logo_69286-296.jpg"
+            }
+        };
+
+        function showPopup(eventName) {
+            const event = events[eventName];
+            document.getElementById('popup-title').textContent = eventName;
+            document.getElementById('popup-image').src = event.image;
+            document.getElementById('popup-image').alt = `High-detail professional image illustrating the creative and technical aspects of ${eventName}, featuring specialized equipment, artistic elements, and immersive filmmaking environments to convey the event's energy and precision.`;
+            document.getElementById('popup-description').textContent = event.description;
+            document.getElementById('popup').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Staggered animations on scroll
+        window.addEventListener('scroll', () => {
+            const fades = document.querySelectorAll('.fade-in, .slide-up');
+            fades.forEach((el, index) => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight - 100) {
+                    setTimeout(() => {
+                        el.style.animationPlayState = 'running';
+                    }, index * 250);
+                }
+            });
+        });
+
+        // Pause animations initially
+        document.querySelectorAll('.fade-in, .slide-up').forEach(el => {
+            el.style.animationPlayState = 'paused';
+        });
+
+        // Background transition on scroll with IntersectionObserver
+        const sections = document.querySelectorAll('section');
+        const bg = document.getElementById('section-bg');
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.5
+        };
+
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    bg.className = `section-bg ${id}-bg`;
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => observer.observe(section));
+    </script>
+</body>
+</html>
+</content>
+</create_file>
